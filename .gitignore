@@ -162,6 +162,9 @@ Thumbs.db
 *.bak
 *.backup
 
-# FFmpeg (keep the folder structure but ignore the binaries in git)
-# ffmpeg/
-# Note: FFmpeg binaries should be downloaded separately due to size
+# FFmpeg binaries (too large for GitHub)
+ffmpeg/*.exe
+ffmpeg/*.dll
+ffmpeg/bin/
+# Keep the folder structure
+!ffmpeg/.gitkeep
