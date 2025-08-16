@@ -1,0 +1,137 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', 3.11]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 pytest
+    
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Test imports
+      run: |
+        python -c "import sys; sys.path.insert(0, 'src'); import main_window, download_manager, youtube_downloader"
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Download FFmpeg
+      run: |
+        # Create ffmpeg directory
+        mkdir ffmpeg
+        # Note: In a real workflow, you'd download FFmpeg binaries here
+        # For now, this is a placeholder
+        echo "FFmpeg download would happen here"
+    
+    - name: Build executable
+      run: |
+        python build.py
+    
+    - name: Create release archive
+      run: |
+        # Create a zip file with the executable and documentation
+        powershell Compress-Archive -Path "dist/youtube-mp3-gui/*" -DestinationPath "youtube-mp3-downloader-${{ github.ref_name }}.zip"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: youtube-mp3-downloader-${{ github.ref_name }}
+        path: youtube-mp3-downloader-${{ github.ref_name }}.zip
+
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: youtube-mp3-downloader-${{ github.ref_name }}
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: YouTube MP3 Downloader ${{ github.ref_name }}
+        body: |
+          ## Changes in this Release
+          
+          - See [CHANGELOG.md](CHANGELOG.md) for detailed changes
+          
+          ## Download
+          
+          Download the `youtube-mp3-downloader-${{ github.ref_name }}.zip` file below, extract it, and run `youtube-mp3-gui.exe`.
+          
+          ## System Requirements
+          
+          - Windows 10 or later
+          - 4 GB RAM minimum
+          - Internet connection
+          
+          ## Features
+          
+          - Modern GUI with dark/light themes
+          - Concurrent downloads (up to 3 simultaneous)
+          - Real-time progress tracking
+          - Responsive design
+          - High-quality MP3 output (192 kbps)
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: youtube-mp3-downloader-${{ github.ref_name }}.zip
+        asset_name: youtube-mp3-downloader-${{ github.ref_name }}.zip
+        asset_content_type: application/zip
