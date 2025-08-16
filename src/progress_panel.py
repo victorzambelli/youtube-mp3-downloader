@@ -85,7 +85,7 @@ class ProgressPanel(ctk.CTkFrame):
         # General progress label
         self.general_progress_label = self.theme_manager.create_themed_label(
             progress_frame, 
-            text="Progresso Geral:",
+            text="Overall Progress:",
             font_type="body_bold"
         )
         self.general_progress_label.grid(row=0, column=0, padx=(10, 5), pady=10, sticky="w")
@@ -118,7 +118,7 @@ class ProgressPanel(ctk.CTkFrame):
         # Log title
         self.log_title = self.theme_manager.create_themed_label(
             log_frame,
-            text="Logs de Progresso:",
+            text="Progress Logs:",
             font_type="body_bold"
         )
         self.log_title.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
@@ -145,7 +145,7 @@ class ProgressPanel(ctk.CTkFrame):
         # Individual progress title (initially hidden)
         self.individual_title = self.theme_manager.create_themed_label(
             self.individual_frame,
-            text="Progresso Individual:",
+            text="Individual Progress:",
             font_type="body_bold"
         )
         

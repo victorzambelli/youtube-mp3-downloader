@@ -40,7 +40,7 @@ class YouTubeDownloader:
             if not os.path.exists(self.download_folder):
                 os.makedirs(self.download_folder)
         except OSError as e:
-            raise FileSystemError(f"Não foi possível criar a pasta de download: {e}")
+            raise FileSystemError(f"Could not create download folder: {e}")
     
     def _get_ffmpeg_path(self) -> str:
         """Get FFmpeg path, using custom path if provided or detecting automatically."""
@@ -115,18 +115,18 @@ class YouTubeDownloader:
             # Check for cancellation before starting
             if cancel_event and cancel_event.is_set():
                 if log_callback:
-                    log_callback(f"Download cancelado antes de iniciar: {url}")
+                    log_callback(f"Download canceled before starting: {url}")
                 return False
             
             if log_callback:
-                log_callback(f"Iniciando download: {url}")
+                log_callback(f"Starting download: {url}")
             
             def progress_hook(d):
                 # Check for cancellation during download
                 if cancel_event and cancel_event.is_set():
                     self._cancel_requested = True
                     # Force yt-dlp to stop by raising an exception
-                    raise yt_dlp.utils.DownloadError("Download cancelado pelo usuário")
+                    raise yt_dlp.utils.DownloadError("Download canceled by user")
                 
                 if progress_callback and d['status'] == 'downloading':
                     progress_callback({
@@ -141,7 +141,7 @@ class YouTubeDownloader:
                     # Check for cancellation before conversion
                     if cancel_event and cancel_event.is_set():
                         self._cancel_requested = True
-                        raise yt_dlp.utils.DownloadError("Download cancelado pelo usuário")
+                        raise yt_dlp.utils.DownloadError("Download canceled by user")
                     
                     progress_callback({
                         'url': url,
@@ -157,11 +157,11 @@ class YouTubeDownloader:
             # Final check for cancellation
             if cancel_event and cancel_event.is_set():
                 if log_callback:
-                    log_callback(f"Download cancelado: {url}")
+                    log_callback(f"Download canceled: {url}")
                 return False
             
             if log_callback:
-                log_callback(f"Download concluído: {url}")
+                log_callback(f"Download completed: {url}")
             
             if progress_callback:
                 progress_callback({
@@ -174,19 +174,19 @@ class YouTubeDownloader:
         except yt_dlp.utils.DownloadError as e:
             error_msg = str(e)
             # Check if this was a user cancellation
-            if "cancelado pelo usuário" in error_msg.lower():
+            if "canceled by user" in error_msg.lower():
                 if log_callback:
-                    log_callback(f"Download cancelado: {url}")
+                    log_callback(f"Download canceled: {url}")
                 return False
             elif "network" in error_msg.lower() or "connection" in error_msg.lower():
-                raise NetworkError(f"Erro de rede ao baixar {url}: {error_msg}")
+                raise NetworkError(f"Network error downloading {url}: {error_msg}")
             elif "postprocess" in error_msg.lower() or "ffmpeg" in error_msg.lower():
-                raise ConversionError(f"Erro na conversão de {url}: {error_msg}")
+                raise ConversionError(f"Error converting {url}: {error_msg}")
             else:
-                raise DownloadError(f"Erro ao baixar {url}: {error_msg}")
+                raise DownloadError(f"Error downloading {url}: {error_msg}")
         
         except Exception as e:
-            raise DownloadError(f"Erro inesperado ao baixar {url}: {str(e)}")
+            raise DownloadError(f"Unexpected error downloading {url}: {str(e)}")
     
     def download_multiple(
         self, 
@@ -212,20 +212,20 @@ class YouTubeDownloader:
         }
         
         if log_callback:
-            log_callback(f"Iniciando download de {len(urls)} vídeos...")
-            log_callback(f"Pasta de destino: {self.download_folder}")
+            log_callback(f"Starting download of {len(urls)} videos...")
+            log_callback(f"Destination folder: {self.download_folder}")
             
             try:
                 ffmpeg_path = self._get_ffmpeg_path()
-                log_callback(f"Usando FFmpeg: {ffmpeg_path}")
+                log_callback(f"Using FFmpeg: {ffmpeg_path}")
             except FFmpegNotFoundError as e:
-                log_callback(f"Erro: {str(e)}")
+                log_callback(f"Error: {str(e)}")
                 raise
         
         for i, url in enumerate(urls, 1):
             try:
                 if log_callback:
-                    log_callback(f"[{i}/{len(urls)}] Processando: {url}")
+                    log_callback(f"[{i}/{len(urls)}] Processing: {url}")
                 
                 # Create a wrapper for progress callback to include overall progress
                 def overall_progress_callback(progress_data):
@@ -251,9 +251,9 @@ class YouTubeDownloader:
                 results['errors'][url] = str(e)
                 
                 if log_callback:
-                    log_callback(f"Erro ao processar {url}: {str(e)}")
+                    log_callback(f"Error processing {url}: {str(e)}")
         
         if log_callback:
-            log_callback(f"Download concluído! {len(results['successful'])} sucessos, {len(results['failed'])} falhas")
+            log_callback(f"Download completed! {len(results['successful'])} successes, {len(results['failed'])} failures")
         
         return results

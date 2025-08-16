@@ -121,7 +121,7 @@ class MainWindow(ctk.CTk):
         # URL input label
         self.url_label = self.theme_manager.create_themed_label(
             input_frame,
-            text="URLs dos Vídeos:",
+            text="Video URLs:",
             font_type="subheading"
         )
         self.url_label.grid(row=0, column=0, padx=20, pady=(15, 8), sticky="w")
@@ -139,7 +139,7 @@ class MainWindow(ctk.CTk):
         self.url_textbox.grid(row=1, column=0, padx=20, pady=(0, 15), sticky="ew")
         
         # Add placeholder text
-        placeholder_text = "Cole aqui as URLs dos vídeos do YouTube (uma por linha)..."
+        placeholder_text = "Paste the YouTube video URLs here (one per line)..."
         self.url_textbox.insert("1.0", placeholder_text)
         self.url_textbox.configure(text_color=self.theme_manager.get_color("text_placeholder"))
         
@@ -178,7 +178,7 @@ class MainWindow(ctk.CTk):
         # Cancel button (initially hidden) - centered with fixed width
         self.cancel_button = self.theme_manager.create_themed_button(
             button_frame,
-            text="Cancelar",
+            text="Cancel",
             command=self._on_cancel_clicked_animated,
             button_type="error",
             font=self.theme_manager.get_font("button_large"),
@@ -203,7 +203,7 @@ class MainWindow(ctk.CTk):
         # Status label
         self.status_label = self.theme_manager.create_themed_label(
             status_frame,
-            text="Status: Pronto",
+            text="Status: Ready",
             font_type="small",
             anchor="w"
         )
@@ -234,7 +234,7 @@ class MainWindow(ctk.CTk):
                 try:
                     os.makedirs(downloads_dir, exist_ok=True)
                 except Exception as e:
-                    return False, f"Não foi possível criar a pasta de downloads: {str(e)}"
+                    return False, f"Could not create downloads folder: {str(e)}"
             
             # Test write permissions
             test_file = os.path.join(downloads_dir, ".test_write")
@@ -243,18 +243,18 @@ class MainWindow(ctk.CTk):
                     f.write("test")
                 os.remove(test_file)
             except Exception as e:
-                return False, f"Sem permissão de escrita na pasta de downloads: {str(e)}"
+                return False, f"No write permission in downloads folder: {str(e)}"
             
             # Check FFmpeg availability
             from .ffmpeg_service import FFmpegService
             ffmpeg_available, ffmpeg_path = FFmpegService.check_availability()
             if not ffmpeg_available:
-                return False, "FFmpeg não encontrado. Verifique se está instalado na pasta 'ffmpeg' ou no sistema."
+                return False, "FFmpeg not found. Please verify it's installed in the 'ffmpeg' folder or in the system."
             
             return True, ""
             
         except Exception as e:
-            return False, f"Erro ao validar ambiente: {str(e)}"
+            return False, f"Error validating environment: {str(e)}"
     
     def _on_url_text_focus(self, event=None):
         """Handle URL text focus events to manage placeholder."""
@@ -267,7 +267,7 @@ class MainWindow(ctk.CTk):
         """Handle URL text focus out events to restore placeholder if empty."""
         content = self.url_textbox.get("1.0", "end-1c").strip()
         if not content:
-            placeholder_text = "Cole aqui as URLs dos vídeos do YouTube (uma por linha)..."
+            placeholder_text = "Paste the YouTube video URLs here (one per line)..."
             self.url_textbox.insert("1.0", placeholder_text)
             self.url_textbox.configure(text_color=self.theme_manager.get_color("text_placeholder"))
             self._placeholder_active = True
@@ -302,12 +302,12 @@ class MainWindow(ctk.CTk):
         
         # Get URLs from text input (skip if placeholder is active)
         if self._placeholder_active:
-            messagebox.showwarning("Aviso", "Por favor, insira pelo menos uma URL.")
+            messagebox.showwarning("Warning", "Please enter at least one URL.")
             return
         
         url_text = self.url_textbox.get("1.0", "end-1c").strip()
         if not url_text:
-            messagebox.showwarning("Aviso", "Por favor, insira pelo menos uma URL.")
+            messagebox.showwarning("Warning", "Please enter at least one URL.")
             return
         
         try:
@@ -317,26 +317,26 @@ class MainWindow(ctk.CTk):
             # Validate download environment first
             env_valid, env_error = self._validate_download_environment()
             if not env_valid:
-                self.progress_panel.log_error(f"Ambiente inválido: {env_error}")
-                messagebox.showerror("Erro de Configuração", env_error)
-                self._update_status("Erro de configuração")
+                self.progress_panel.log_error(f"Invalid environment: {env_error}")
+                messagebox.showerror("Configuration Error", env_error)
+                self._update_status("Configuration error")
                 return
             
             # Extract and validate URLs
             urls = URLValidator.extract_urls_from_text(url_text)
             if not urls:
-                error_msg = "Nenhuma URL válida do YouTube foi encontrada.\n\nVerifique se as URLs estão no formato correto:\n• https://www.youtube.com/watch?v=...\n• https://youtu.be/..."
-                self.progress_panel.log_error("Nenhuma URL válida encontrada")
+                error_msg = "No valid YouTube URL was found.\n\nPlease verify that the URLs are in the correct format:\n• https://www.youtube.com/watch?v=...\n• https://youtu.be/..."
+                self.progress_panel.log_error("No valid URL found")
                 
                 # Animate error with shake effect
                 animate_error_shake(self.url_textbox)
                 
-                messagebox.showerror("Erro de Validação", error_msg)
-                self._update_status("URLs inválidas")
+                messagebox.showerror("Validation Error", error_msg)
+                self._update_status("Invalid URLs")
                 return
             
             # Log found URLs for user confirmation
-            self.progress_panel.log_info(f"Encontradas {len(urls)} URL(s) válida(s) para download")
+            self.progress_panel.log_info(f"Found {len(urls)} valid URL(s) for download")
             
             # Add URLs to download manager
             task_ids = self.download_manager.add_urls([url_text])
@@ -352,28 +352,28 @@ class MainWindow(ctk.CTk):
             
             # Start download
             if self.download_manager.start_download():
-                self.progress_panel.log_info(f"Iniciando download de {len(urls)} arquivo(s)...")
-                self.progress_panel.log_info(f"Pasta de destino: {self.download_manager.download_folder}")
-                self._update_status(f"Preparando download de {len(urls)} arquivo(s)...")
+                self.progress_panel.log_info(f"Starting download of {len(urls)} file(s)...")
+                self.progress_panel.log_info(f"Destination folder: {self.download_manager.download_folder}")
+                self._update_status(f"Preparing download of {len(urls)} file(s)...")
             else:
                 self._set_downloading_state(False)
-                error_msg = "Não foi possível iniciar o download. Verifique se há URLs válidas."
+                error_msg = "Could not start the download. Please verify that there are valid URLs."
                 self.progress_panel.log_error(error_msg)
-                messagebox.showerror("Erro", error_msg)
-                self._update_status("Erro ao iniciar download")
+                messagebox.showerror("Error", error_msg)
+                self._update_status("Error starting download")
         
         except URLValidationError as e:
-            self.progress_panel.log_error(f"Erro de validação: {str(e)}")
+            self.progress_panel.log_error(f"Validation error: {str(e)}")
             animate_error_shake(self.url_textbox)
-            messagebox.showerror("Erro de Validação", str(e))
-            self._update_status("Erro de validação")
+            messagebox.showerror("Validation Error", str(e))
+            self._update_status("Validation error")
         except Exception as e:
-            error_msg = f"Erro inesperado: {str(e)}"
+            error_msg = f"Unexpected error: {str(e)}"
             self.progress_panel.log_error(error_msg)
             animate_error_shake(self.download_button)
-            messagebox.showerror("Erro", error_msg)
+            messagebox.showerror("Error", error_msg)
             self._set_downloading_state(False)
-            self._update_status("Erro")
+            self._update_status("Error")
     
     def _on_cancel_clicked_animated(self):
         """Handle cancel button click with animation."""
@@ -394,22 +394,22 @@ class MainWindow(ctk.CTk):
         
         # Ask for confirmation with specific details
         result = messagebox.askyesno(
-            "Confirmar Cancelamento",
-            f"Tem certeza que deseja cancelar {active_count} download(s) em progresso?\n\n"
-            f"Downloads ativos: {stats['active']}\n"
-            f"Downloads pendentes: {stats['pending']}\n\n"
-            f"Esta ação não pode ser desfeita e arquivos parcialmente baixados serão perdidos."
+            "Confirm Cancellation",
+            f"Are you sure you want to cancel {active_count} download(s) in progress?\n\n"
+            f"Active downloads: {stats['active']}\n"
+            f"Pending downloads: {stats['pending']}\n\n"
+            f"This action cannot be undone and partially downloaded files will be lost."
         )
         
         if result:
             try:
                 # Update UI immediately to show cancellation is in progress
                 self.cancel_button.configure(text="Cancelando...", state="disabled")
-                self._update_status("Cancelando downloads...")
-                
+                self._update_status("Cancelling downloads...")
+
                 # Log cancellation request
-                self.progress_panel.log_warning("Cancelamento solicitado pelo usuário...")
-                self.progress_panel.log_info("Interrompendo downloads em progresso...")
+                self.progress_panel.log_warning("Cancellation requested by user...")
+                self.progress_panel.log_info("Stopping downloads in progress...")
                 
                 # Cancel downloads
                 self.download_manager.cancel_download()
@@ -418,19 +418,19 @@ class MainWindow(ctk.CTk):
                 self._schedule_cancellation_updates()
                 
             except Exception as e:
-                error_msg = f"Erro ao cancelar downloads: {str(e)}"
+                error_msg = f"Error canceling downloads: {str(e)}"
                 self.progress_panel.log_error(error_msg)
-                messagebox.showerror("Erro", error_msg)
+                messagebox.showerror("Error", error_msg)
                 
                 # Reset cancel button on error
-                self.cancel_button.configure(text="Cancelar", state="normal")
+                self.cancel_button.configure(text="Cancel", state="normal")
     
     def _schedule_cancellation_updates(self):
         """Schedule periodic updates during cancellation process."""
         def check_cancellation_progress():
             if not self.is_downloading:
                 # Cancellation completed
-                self.cancel_button.configure(text="Cancelar", state="normal")
+                self.cancel_button.configure(text="Cancel", state="normal")
                 return
             
             # Check if downloads are still active
@@ -439,13 +439,13 @@ class MainWindow(ctk.CTk):
             
             if active_count == 0:
                 # All downloads cancelled
-                self.progress_panel.log_warning("Todos os downloads foram cancelados")
+                self.progress_panel.log_warning("All downloads have been canceled")
                 self._set_downloading_state(False)
-                self._update_status("Downloads cancelados")
+                self._update_status("Canceled downloads")
             else:
                 # Still cancelling, check again in 500ms
                 # Update cancel button text to show progress
-                remaining_text = f"Cancelando... ({active_count})"
+                remaining_text = f"Canceling... ({active_count})"
                 self.cancel_button.configure(text=remaining_text)
                 self.after(500, check_cancellation_progress)
         
@@ -493,20 +493,20 @@ class MainWindow(ctk.CTk):
             
             # Log status changes for better user feedback
             if status == DownloadStatus.DOWNLOADING and title:
-                self.progress_panel.log_info(f"Baixando: {title}")
+                self.progress_panel.log_info(f"Downloading: {title}")
             elif status == DownloadStatus.CONVERTING:
-                self.progress_panel.log_info(f"Convertendo para MP3: {title or url}")
+                self.progress_panel.log_info(f"Converting to MP3: {title or url}")
             elif status == DownloadStatus.COMPLETED:
-                self.progress_panel.log_success(f"Concluído: {title or url}")
+                self.progress_panel.log_success(f"Completed: {title or url}")
                 # Animate success with subtle pulse
                 animate_success_pulse(self.progress_panel)
             elif status == DownloadStatus.FAILED:
-                error_msg = f"Falha no download: {title or url}"
+                error_msg = f"Download failed: {title or url}"
                 if error:
                     error_msg += f" - {error}"
                 self.progress_panel.log_error(error_msg)
             elif status == DownloadStatus.CANCELLED:
-                self.progress_panel.log_warning(f"Cancelado: {title or url}")
+                self.progress_panel.log_warning(f"Canceled: {title or url}")
             
             # Update progress panel
             self.progress_panel.update_download_task(
@@ -522,16 +522,16 @@ class MainWindow(ctk.CTk):
             
             # Update status bar with current activity
             if status == DownloadStatus.DOWNLOADING:
-                self._update_status(f"Baixando: {title or 'arquivo'}")
+                self._update_status(f"Downloading: {title or 'file'}")
             elif status == DownloadStatus.CONVERTING:
-                self._update_status(f"Convertendo: {title or 'arquivo'}")
+                self._update_status(f"Converting: {title or 'file'}")
             
             # Check if all downloads are complete
             if status in [DownloadStatus.COMPLETED, DownloadStatus.FAILED, DownloadStatus.CANCELLED]:
                 self._check_download_completion()
         
         except Exception as e:
-            error_msg = f"Erro ao atualizar progresso: {str(e)}"
+            error_msg = f"Error updating progress: {str(e)}"
             self.progress_panel.log_error(error_msg)
             print(f"Progress callback error: {e}")  # Debug logging
     
@@ -546,22 +546,22 @@ class MainWindow(ctk.CTk):
         message_lower = message.lower()
         
         # Check for specific error types and provide helpful messages
-        if "erro" in message_lower or "falha" in message_lower or "failed" in message_lower:
+        if "error" in message_lower or "failed" in message_lower:
             # Add helpful context for common errors
             if "network" in message_lower or "connection" in message_lower:
-                enhanced_message = f"{message}\nDica: Verifique sua conexão com a internet."
+                enhanced_message = f"{message}\nTip: Check your internet connection."
             elif "ffmpeg" in message_lower:
-                enhanced_message = f"{message}\nDica: Verifique se o FFmpeg está instalado corretamente."
+                enhanced_message = f"{message}\nTip: Make sure FFmpeg is installed correctly."
             elif "private" in message_lower or "unavailable" in message_lower:
-                enhanced_message = f"{message}\nDica: O vídeo pode estar privado ou indisponível."
+                enhanced_message = f"{message}\nTip: The video may be private or unavailable."
             else:
                 enhanced_message = message
             
             self.progress_panel.log_error(enhanced_message)
             
-        elif "aviso" in message_lower or "warning" in message_lower:
+        elif "warning" in message_lower:
             self.progress_panel.log_warning(message)
-        elif "sucesso" in message_lower or "concluído" in message_lower or "completed" in message_lower:
+        elif "success" in message_lower or "completed" in message_lower:
             self.progress_panel.log_success(message)
         else:
             self.progress_panel.log_info(message)
@@ -583,20 +583,20 @@ class MainWindow(ctk.CTk):
             status_parts = []
             
             if stats['completed'] > 0:
-                completion_parts.append(f"{stats['completed']} arquivo(s) baixado(s) com sucesso")
-                status_parts.append(f"{stats['completed']} concluído(s)")
+                completion_parts.append(f"{stats['completed']} file(s) successfully downloaded")
+                status_parts.append(f"{stats['completed']} completed")
             
             if stats['failed'] > 0:
-                completion_parts.append(f"{stats['failed']} download(s) falharam")
-                status_parts.append(f"{stats['failed']} falharam")
+                completion_parts.append(f"{stats['failed']} download(s) failed")
+                status_parts.append(f"{stats['failed']} failed")
             
             if stats['cancelled'] > 0:
-                completion_parts.append(f"{stats['cancelled']} download(s) cancelado(s)")
-                status_parts.append(f"{stats['cancelled']} cancelado(s)")
+                completion_parts.append(f"{stats['cancelled']} download(s) canceled")
+                status_parts.append(f"{stats['cancelled']} canceled")
             
             # Log final results
             if completion_parts:
-                final_message = "Downloads finalizados! " + ", ".join(completion_parts) + "."
+                final_message = "Downloads finished! " + ", ".join(completion_parts) + "."
                 if stats['completed'] > 0 and stats['failed'] == 0 and stats['cancelled'] == 0:
                     self.progress_panel.log_success(final_message)
                 elif stats['failed'] > 0 or stats['cancelled'] > 0:
@@ -606,14 +606,14 @@ class MainWindow(ctk.CTk):
             
             # Update status bar
             if status_parts:
-                status_message = "Finalizado: " + ", ".join(status_parts)
+                status_message = "Finished: " + ", ".join(status_parts)
                 self._update_status(status_message)
             else:
-                self._update_status("Pronto")
+                self._update_status("Ready")
             
             # Show completion notification if there were successful downloads
             if stats['completed'] > 0:
-                self.progress_panel.log_info(f"Arquivos salvos na pasta: {self.download_manager.download_folder}")
+                self.progress_panel.log_info(f"Files saved in folder: {self.download_manager.download_folder}")
                 # Animate overall success
                 animate_success_pulse(self.progress_panel)
     
@@ -647,7 +647,7 @@ class MainWindow(ctk.CTk):
             
             # Update status
             if not downloading:
-                self._update_status("Pronto")
+                self._update_status("Ready")
     
     def _update_status(self, status: str):
         """
@@ -665,15 +665,15 @@ class MainWindow(ctk.CTk):
             active_count = stats['active'] + stats['pending']
             
             result = messagebox.askyesno(
-                "Confirmar Saída",
-                f"Existem {active_count} download(s) em progresso.\n\nDeseja cancelar os downloads e sair da aplicação?"
+                "Confirm Exit",
+                f"There are {active_count} download(s) in progress.\n\nDo you want to cancel the downloads and exit the application?"
             )
             
             if result:
                 try:
                     if self.download_manager:
                         self.download_manager.cancel_download()
-                        self._update_status("Cancelando e fechando...")
+                        self._update_status("Canceling and closing...")
                         # Give a moment for cancellation to process
                         self.after(1000, self._force_close)
                     else:
@@ -753,9 +753,9 @@ class MainWindow(ctk.CTk):
             if self._current_window_width < 450:
                 self.cancel_button.configure(text="⏹", width=60)  # Very compact
             elif self._current_window_width < 550:
-                self.cancel_button.configure(text="Cancelar", width=100)  # Compact
+                self.cancel_button.configure(text="Cancel", width=100)  # Compact
             else:
-                self.cancel_button.configure(text="Cancelar", width=140)  # Normal
+                self.cancel_button.configure(text="Cancel", width=140)  # Normal
     
     def _update_normal_layout(self):
         """Update layout for normal/large windows."""
@@ -764,7 +764,7 @@ class MainWindow(ctk.CTk):
             self.download_button.configure(text="Download", width=140)
         
         if hasattr(self, 'cancel_button'):
-            self.cancel_button.configure(text="Cancelar", width=140)
+            self.cancel_button.configure(text="Cancel", width=140)
     
     def _update_responsive_layout(self):
         """Update layout based on current window size."""

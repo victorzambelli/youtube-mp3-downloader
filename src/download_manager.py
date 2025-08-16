@@ -112,7 +112,7 @@ class DownloadManager:
                 task_ids.append(task_id)
         
         if self.log_callback:
-            self.log_callback(f"Adicionadas {len(task_ids)} URLs para download")
+            self.log_callback(f"Added {len(task_ids)} URLs for download")
         
         return task_ids
     
@@ -126,12 +126,12 @@ class DownloadManager:
         with self._lock:
             if self.is_downloading:
                 if self.log_callback:
-                    self.log_callback("Download já está em progresso")
+                    self.log_callback("Download already in progress")
                 return False
             
             if not self.tasks:
                 if self.log_callback:
-                    self.log_callback("Nenhuma URL para download")
+                    self.log_callback("No URLs for download")
                 return False
             
             # Reset state
@@ -144,8 +144,8 @@ class DownloadManager:
                 task.set_status(DownloadStatus.PENDING)
         
         if self.log_callback:
-            self.log_callback(f"Iniciando download de {len(self.tasks)} arquivos...")
-            self.log_callback(f"Pasta de destino: {self.download_folder}")
+            self.log_callback(f"Starting download of {len(self.tasks)} files...")
+            self.log_callback(f"Destination folder: {self.download_folder}")
         
         # Start downloads in a separate thread
         download_thread = threading.Thread(target=self._run_downloads, daemon=True)
@@ -163,7 +163,7 @@ class DownloadManager:
             self._cancel_event.set()
         
         if self.log_callback:
-            self.log_callback("Cancelando downloads...")
+            self.log_callback("Canceling downloads...")
         
         # Cancel all running futures
         for future in self._futures.values():
@@ -293,7 +293,7 @@ class DownloadManager:
                         future.result()  # This will raise any exceptions
                     except Exception as e:
                         if self.log_callback:
-                            self.log_callback(f"Erro em download: {str(e)}")
+                            self.log_callback(f"Error in download: {str(e)}")
         
         finally:
             with self._lock:
@@ -303,13 +303,13 @@ class DownloadManager:
             
             if self.log_callback:
                 if self.is_cancelled:
-                    self.log_callback("Downloads cancelados")
+                    self.log_callback("Downloads canceled")
                 else:
                     stats = self.get_overall_progress()
                     self.log_callback(
-                        f"Downloads concluídos! "
-                        f"Sucessos: {stats['completed']}, "
-                        f"Falhas: {stats['failed']}"
+                        f"Downloads completed! "
+                        f"Successes: {stats['completed']}, "
+                        f"Failures: {stats['failed']}"
                     )
     
     def _download_single_task(self, task_id: str, task: DownloadTask) -> None:
@@ -417,11 +417,11 @@ class DownloadManager:
             self._futures.clear()
             
             if self.log_callback:
-                self.log_callback("Recursos limpos após cancelamento")
+                self.log_callback("Resources cleaned after cancellation")
                 
         except Exception as e:
             if self.log_callback:
-                self.log_callback(f"Erro na limpeza de recursos: {str(e)}")
+                self.log_callback(f"Error cleaning resources: {str(e)}")
     
     def _notify_progress(self, task_id: str, progress_data: Dict[str, Any]) -> None:
         """
@@ -450,4 +450,4 @@ class DownloadManager:
                 self.progress_callback(task_id, progress_data)
             except Exception as e:
                 if self.log_callback:
-                    self.log_callback(f"Erro no callback de progresso: {str(e)}")
+                    self.log_callback(f"Error in progress callback: {str(e)}")

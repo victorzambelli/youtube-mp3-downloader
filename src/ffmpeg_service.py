@@ -54,8 +54,8 @@ class FFmpegService:
         
         if not is_available:
             raise FFmpegNotFoundError(
-                "FFmpeg não encontrado. Por favor, instale o FFmpeg ou "
-                "coloque o executável na pasta 'ffmpeg/'."
+                "FFmpeg not found. Please install FFmpeg or "
+                "place the executable in the 'ffmpeg/' folder."
             )
         
         return ffmpeg_path
