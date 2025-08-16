@@ -91,6 +91,7 @@ class MainWindow(ctk.CTk):
         header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 8))
         header_frame.grid_columnconfigure(0, weight=1)
         header_frame.grid_columnconfigure(1, weight=0)
+        header_frame.grid_columnconfigure(2, weight=0)
         
         # Application title - responsive
         self.title_label = self.theme_manager.create_themed_label(
@@ -99,6 +100,18 @@ class MainWindow(ctk.CTk):
             font_type="title"
         )
         self.title_label.grid(row=0, column=0, pady=15, sticky="w", padx=(15, 0))
+        
+        # Folder button to open downloads folder
+        self.folder_button = self.theme_manager.create_themed_button(
+            header_frame,
+            text="📁",
+            command=self._open_downloads_folder,
+            button_type="secondary",
+            width=35,
+            height=35,
+            font=ctk.CTkFont(size=14)
+        )
+        self.folder_button.grid(row=0, column=1, pady=15, padx=(0, 5), sticky="e")
         
         # Theme toggle button
         self.theme_button = self.theme_manager.create_themed_button(
@@ -110,7 +123,7 @@ class MainWindow(ctk.CTk):
             height=35,
             font=ctk.CTkFont(size=14)
         )
-        self.theme_button.grid(row=0, column=1, pady=15, padx=(0, 15), sticky="e")
+        self.theme_button.grid(row=0, column=2, pady=15, padx=(0, 15), sticky="e")
     
     def _create_url_input_section(self):
         """Create the URL input section."""
@@ -699,6 +712,35 @@ class MainWindow(ctk.CTk):
     def _toggle_theme(self):
         """Toggle between dark and light themes."""
         self.theme_manager.toggle_theme()
+    
+    def _open_downloads_folder(self):
+        """Open the downloads folder in the file explorer."""
+        try:
+            import os
+            import subprocess
+            import platform
+            
+            # Get the download folder path
+            download_folder = os.path.abspath(self.download_manager.download_folder)
+            
+            # Ensure the folder exists
+            if not os.path.exists(download_folder):
+                os.makedirs(download_folder, exist_ok=True)
+                
+            # Open the folder based on the operating system
+            if platform.system() == "Windows":
+                os.startfile(download_folder)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.run(["open", download_folder])
+            else:  # Linux
+                subprocess.run(["xdg-open", download_folder])
+                
+            self._update_status(f"Opened downloads folder: {download_folder}")
+            
+        except Exception as e:
+            error_msg = f"Error opening downloads folder: {str(e)}"
+            self.progress_panel.log_error(error_msg)
+            print(error_msg)  # Debug logging
     
     def _on_theme_changed(self):
         """Handle theme change events."""
