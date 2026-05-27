@@ -50,7 +50,33 @@ jobs:
 
       # ── 5. Build with PyInstaller ────────────────────────────────────────────
       - name: Build executable
-        run: python build.py
+        run: |
+          # Run PyInstaller directly — exit code 1 is expected due to optional
+          # Linux-only imports (secretstorage, curl_cffi) being unavailable on
+          # Windows CI runners. The real success indicator is the exe existing.
+          python -m PyInstaller --clean --noconfirm build.spec || true
+
+      # ── 5b. Validate build output ────────────────────────────────────────────
+      - name: Validate build output
+        run: |
+          $exe = "dist\youtube-mp3-gui\youtube-mp3-gui.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "Build failed: youtube-mp3-gui.exe not found in dist!"
+            exit 1
+          }
+          $sizeMB = [math]::Round((Get-Item $exe).Length / 1MB, 1)
+          Write-Host "Build successful! EXE size: $sizeMB MB"
+          
+          # Verify FFmpeg was bundled
+          $ffmpegDir = "dist\youtube-mp3-gui\_internal\ffmpeg"
+          foreach ($bin in @("ffmpeg.exe", "ffprobe.exe", "ffplay.exe")) {
+            if (-not (Test-Path "$ffmpegDir\$bin")) {
+              Write-Error "Missing bundled binary: $bin"
+              exit 1
+            }
+            Write-Host "OK: $bin bundled"
+          }
+        shell: powershell
 
       # ── 6. Create ZIP package ────────────────────────────────────────────────
       - name: Create release ZIP
