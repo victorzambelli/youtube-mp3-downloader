@@ -63,7 +63,8 @@ class YouTubeDownloader:
         ffmpeg_location = FFmpegService.get_ffmpeg_location_for_ydl(ffmpeg_path)
         
         opts = {
-            'format': 'bestaudio/best',
+            # Prefer audio-only formats; fall back to best available
+            'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -71,8 +72,20 @@ class YouTubeDownloader:
             }],
             'outtmpl': os.path.join(self.download_folder, '%(title)s.%(ext)s'),
             'noplaylist': True,
-            'quiet': True,
-            'no_warnings': True,
+            # Keep warnings visible so errors are reported in the log panel
+            'quiet': False,
+            'no_warnings': False,
+            # Force alternative player clients that don't require JS signature
+            # decoding, bypassing the "Signature extraction failed" YouTube error.
+            # 'missing_pot' allows android formats even without a PO Token
+            # (they may still work for most videos without causing 403 errors).
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['mweb', 'android', 'web_creator'],
+                    'player_skip': ['webpage', 'configs'],
+                    'formats': ['missing_pot'],
+                }
+            },
         }
         
         if ffmpeg_location:
